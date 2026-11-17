@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MD Calendar</title>
+<meta name="theme-color" content="#fbefc2">
+<meta name="description" content="Upcoming meetings of MD, SBPDCL – next 30 days">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MD Calendar">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+:root{
+  --paper:#fffbea; --paper2:#fff6d6; --edge:#f0e2a4; --dash:#ecdfa8;
+  --ink:#2b2a24; --muted:#7a6a3a; --faint:#a8996a;
+  --acc:#2f6f8f; --amber:#b45309; --bad:#b91c1c; --bad-t:#fdeceb; --ok:#15803d; --ok-t:#e9f6ec;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#f3efe0;color:var(--ink);font:15px/1.45 "Segoe UI",Inter,Roboto,"Noto Sans","Noto Sans Devanagari",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.note{max-width:620px;min-height:100%;margin:0 auto;background:var(--paper);display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px var(--edge),0 18px 40px -28px rgba(110,85,0,.55)}
+@media(min-width:700px){body{padding:18px 0}.note{min-height:calc(100% - 36px);border-radius:6px 6px 18px 6px}}
+/* top bar */
+.top{position:sticky;top:0;z-index:5;background:rgba(255,251,234,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px dashed var(--dash);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.row1{display:flex;align-items:center;gap:10px}
+.row1 h1{font-size:17px;margin:0;font-weight:650;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:12.5px;color:var(--muted);margin-top:1px}
+.ib{width:34px;height:34px;border-radius:9px;border:1px solid var(--edge);background:#fffdf3;display:grid;place-items:center;flex:none}
+.ib:hover{background:#fff7dd}
+.ib.spin svg{animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pills{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pills button{border:1px solid var(--edge);background:#fffdf3;border-radius:99px;padding:3px 12px;font-size:13px;color:var(--muted)}
+.pills button.on{background:#fbefc2;border-color:#e6cf7a;color:#5c4a12;font-weight:600}
+.pills .cnt{margin-left:auto;font-size:12.5px;color:var(--muted);align-self:center}
+/* body */
+.body{padding:6px 16px calc(24px + env(safe-area-inset-bottom));flex:1}
+.next{margin:12px 0 4px;background:#fff;border:1px solid var(--edge);border-left:4px solid var(--acc);border-radius:10px;padding:10px 12px}
+.next .k{font-size:11.5px;font-weight:700;letter-spacing:.05em;color:var(--acc);text-transform:uppercase}
+.next .tt{font-weight:600;margin:2px 0;overflow-wrap:anywhere}
+.next .m{font-size:12.5px;color:var(--muted)}
+.day{margin-top:16px}
+.dh{display:flex;align-items:baseline;gap:8px;font-size:12.5px;font-weight:700;color:#8a6d1f;text-transform:uppercase;letter-spacing:.03em;
+  border-bottom:1px dashed var(--dash);padding-bottom:4px}
+.dh.today{color:var(--amber)}
+.dh .n{margin-left:auto;font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
+.hol{font-size:12.5px;color:var(--ok);margin:6px 0 0;display:flex;gap:6px;align-items:center}
+.it{display:grid;grid-template-columns:50px minmax(0,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed #f1e6b8}
+.it:last-child{border-bottom:0}
+.it.done{opacity:.45}
+.it .t{font-weight:650;color:var(--acc);font-size:13.5px;font-variant-numeric:tabular-nums}
+.it .tt{font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.it .m{font-size:12px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:99px;display:inline-block;flex:none}
+.tag{font-size:11px;border-radius:99px;padding:0 7px;border:1px solid var(--edge);background:#fffdf3;white-space:nowrap}
+.tag.bad{background:var(--bad-t);border-color:#f2c6c2;color:var(--bad);font-weight:600}
+.tag.now{background:#e6f0f5;border-color:#c5dbe6;color:var(--acc);font-weight:600}
+.empty{color:var(--faint);padding:30px 0;text-align:center}
+.msg{margin:12px 0 0;border-left:3px solid var(--amber);background:#fdf3d8;border-radius:8px;padding:8px 12px;font-size:13px}
+.msg.bad{border-color:var(--bad);background:var(--bad-t)}
+/* setup */
+.setup{padding:20px 16px}
+.setup h2{font-size:17px;margin:0 0 4px}
+.setup p{color:var(--muted);font-size:13.5px;margin:0 0 16px}
+.setup label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+.setup input{width:100%;border:1px solid var(--edge);border-radius:9px;padding:9px 11px;background:#fff}
+.setup input:focus{outline:2px solid #e6cf7a;outline-offset:1px}
+.btn{border:0;border-radius:9px;padding:9px 16px;background:var(--acc);color:#fff;font-weight:600;margin-top:16px}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--edge);margin-left:8px}
+.hint{font-size:12px;color:var(--faint);margin-top:4px}
+.install{display:none}
+.install.on{display:inline-grid}
+</style>
+</head>
+<body>
+<div class="note">
+  <div class="top">
+    <div class="row1">
+      <div style="min-width:0;flex:1">
+        <h1>MD Calendar · SBPDCL</h1>
+        <div class="sub" id="sub">&nbsp;</div>
+      </div>
+      <button class="ib install" id="install" title="Install app">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+      </button>
+      <button class="ib" id="refresh" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+      <button class="ib" id="settings" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+    <div class="pills" id="pills">
+      <button data-d="1">Today</button><button data-d="7">7 days</button><button data-d="15">15 days</button><button data-d="30">30 days</button>
+      <span class="cnt" id="cnt"></span>
+    </div>
+  </div>
+  <div class="body" id="body"><div class="empty">Loading…</div></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var LS = { url:'mdcal-url', key:'mdcal-key', data:'mdcal-data', days:'mdcal-days' };
+function get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function set(k,v){ try{ if (v==null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+
+/* one-time setup link:  index.html#u=<web app /exec link>&k=<key>  */
+function readSetupLink(){
+  if (!location.hash || location.hash.length<3) return false;
+  var q = new URLSearchParams(location.hash.slice(1));
+  if (!q.get('u') && !q.get('k')) return false;
+  if (q.get('u')) set(LS.url, q.get('u'));
+  if (q.get('k')) set(LS.key, q.get('k'));
+  set(LS.data, null);
+  history.replaceState(null,'',location.pathname+location.search);
+  return true;
+}
+readSetupLink();
+
+var CATS = { rdss:'#1baf7a', meter:'#eda100', rev:'#6250d6', care:'#e87ba4', om:'#008300', solar:'#2b9ac9', scheme:'#b5651d', admin:'#c2477e', other:'#a3abbb' };
+var RULES = [
+  ['admin', /capacity building|training|\bHR\b|court case|store|purchase|\bTRW\b|\bBoD\b|board meeting|departmental|co-?ordination|HoD/i],
+  ['solar', /surya|PMSG|\bULA\b|KUSUM|net[- ]?meter|net billing|energy efficiency|solar/i],
+  ['meter', /smart met|\bRMS\b|service connection|energy accounting|feeder level/i],
+  ['care',  /grievance|visitor|CGRF|1912|customer care|CPGRAM/i],
+  ['rdss',  /RDSS|\bPSS\b/i],
+  ['scheme',/nischay|MKVSY|JANMAN|JGUA|sankalp|संकल्प|vibrant village|special assistance/i],
+  ['rdss',  /project|state plan|civil|thermal|\bNPG\b|परियोजना/i],
+  ['rev',   /revenue|\bSTF\b|finance|loan|BERC|commercial|tariff/i],
+  ['om',    /O&M|interruption|electrocution|DTR|feeder|utility shifting|PESU/i]
+];
+function catOf(t){ for (var i=0;i<RULES.length;i++) if (RULES[i][1].test(t)) return RULES[i][0]; return 'other'; }
+function chairOf(t,l){
+  if (/\bCMD\b|BSPHCL|\bBoD\b|अध्यक्ष-सह-प्रबंध/.test(t) || /CMD Conference/i.test(l)) return 'CMD';
+  if (/chief secretary|मुख्य सचिव|\bCS\b/i.test(t)) return 'Chief Secretary';
+  if (/मुख्यमंत्री|\bCM\b/.test(t)) return 'CM';
+  if (/जिला पदाधिकारी|\bDM\b/.test(t)) return 'DM';
+  return '';
+}
+
+var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function pad(n){ return (n<10?'0':'')+n; }
+function parse(s){ var p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function nice(s){ var d=parse(s); return DOW[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]; }
+function mins(t){ if(!t) return -1; var p=t.split(':'); return +p[0]*60+ +p[1]; }
+function ist(){
+  var f=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}), o={};
+  f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
+  return { date:o.year+'-'+o.month+'-'+o.day, mins:(+o.hour%24)*60+ +o.minute };
+}
+function addDays(s,n){ var d=parse(s); d.setDate(d.getDate()+n); return ymd(d); }
+function inWords(m){ if (m<1) return 'now'; if (m<60) return 'in '+m+' min'; var h=Math.floor(m/60), r=m%60; return 'in '+h+' h'+(r?' '+r+' min':''); }
+function stamp(iso){ if(!iso) return ''; var d=iso.slice(0,10), t=iso.slice(11,16); var n=ist(); return (d===n.date?'today':nice(d))+', '+t; }
+
+var body=document.getElementById('body'), sub=document.getElementById('sub'), cnt=document.getElementById('cnt');
+var state = { data:null, days:+(get(LS.days)||30), offline:false, err:'' };
+
+function showSetup(note){
+  document.getElementById('pills').style.display='none';
+  sub.textContent='Set up once on this device';
+  body.innerHTML='<div class="setup"><h2>Connect your calendar</h2>'+
+    '<p>Paste the web app link and the key from your Apps Script. They stay only on this device.</p>'+
+    (note?'<div class="msg bad" style="margin-bottom:8px">'+esc(note)+'</div>':'')+
+    '<label for="u">Web app link</label><input id="u" placeholder="https://script.google.com/macros/s/…/exec" value="'+esc(get(LS.url)||'')+'" autocomplete="off">'+
+    '<div class="hint">Ends with /exec</div>'+
+    '<label for="k">Key</label><input id="k" placeholder="20 letters and numbers" value="'+esc(get(LS.key)||'')+'" autocomplete="off">'+
+    '<button class="btn" id="save">Save and show meetings</button>'+(get(LS.url)?'<button class="btn ghost" id="cancel">Cancel</button>':'')+'</div>';
+  document.getElementById('save').onclick=function(){
+    var u=document.getElementById('u').value.trim(), k=document.getElementById('k').value.trim();
+    if (!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(u)) { showSetup('That does not look like a web app link.'); return; }
+    if (!k) { showSetup('Please enter the key.'); return; }
+    set(LS.url,u); set(LS.key,k); set(LS.data,null); state.data=null; load(true);
+  };
+  var c=document.getElementById('cancel'); if (c) c.onclick=function(){ render(); };
+}
+
+function load(fresh){
+  var u=get(LS.url), k=get(LS.key);
+  if (!u || !k) return showSetup();
+  var rb=document.getElementById('refresh'); rb.classList.add('spin');
+  var url = u + (u.indexOf('?')<0?'?':'&') + 'api=upcoming&days=31&key='+encodeURIComponent(k)+(fresh?'&fresh=1':'')+'&t='+Date.now();
+  fetch(url,{cache:'no-store',redirect:'follow'}).then(function(r){ return r.json(); }).then(function(d){
+    rb.classList.remove('spin');
+    if (d && d.error==='key') return showSetup('The key is not right. Please check it.');
+    if (!d || d.error) { state.err = 'Could not read the calendar right now.'; state.offline=true; return render(); }
+    state.data=d; state.offline=false; state.err=''; set(LS.data, JSON.stringify(d)); render();
+  }).catch(function(){
+    rb.classList.remove('spin'); state.offline=true;
+    state.err = navigator.onLine===false ? 'You are offline. Showing the last saved list.' : 'Could not reach the calendar. Showing the last saved list.';
+    render();
+  });
+}
+
+function render(){
+  document.getElementById('pills').style.display='';
+  document.querySelectorAll('#pills button').forEach(function(b){ b.classList.toggle('on', +b.getAttribute('data-d')===state.days); });
+  var d = state.data;
+  if (!d){ var c=get(LS.data); if (c) try{ d=state.data=JSON.parse(c); }catch(e){} }
+  if (!d){ body.innerHTML = state.err ? '<div class="msg bad">'+esc(state.err)+'</div>' : '<div class="empty">Loading…</div>'; return; }
+
+  var now=ist(), end=addDays(now.date, state.days===1?0:state.days);
+  var rows = d.rows.map(function(r){
+    var isHol=/^\s*\[(bihar holiday|rh)\]/i.test(r[2]);
+    return { date:r[0], time:isHol?'':r[1], m:isHol?-1:mins(r[1]), title:r[2], loc:r[3], isHol:isHol, gHol:/^\s*\[bihar holiday\]/i.test(r[2]),
+             short: isHol? r[2].replace(/^\s*\[(bihar holiday|rh)\]\s*/i,'') : r[2] };
+  }).filter(function(e){ return e.date>=now.date && e.date<=end; });
+  rows.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:a.m-b.m; });
+
+  // clashes (30-minute slots)
+  var byDay={}; rows.forEach(function(e){ if(!e.isHol && e.m>=0)(byDay[e.date]=byDay[e.date]||[]).push(e); });
+  Object.keys(byDay).forEach(function(k){ var a=byDay[k]; for(var i=0;i<a.length;i++) for(var j=i+1;j<a.length;j++) if (Math.abs(a[i].m-a[j].m)<30){ a[i].clash=a[j].clash=true; } });
+
+  var meets = rows.filter(function(e){return !e.isHol;});
+  var done = function(e){ return e.date===now.date && e.m>=0 && e.m+30<=now.mins; };
+  var next = meets.filter(function(e){ return !done(e) && (e.date>now.date || e.m<0 || e.m+30>now.mins); })[0];
+  var todayLeft = meets.filter(function(e){ return e.date===now.date && !done(e); }).length;
+
+  sub.textContent = (state.days===1?'Today':'Next '+state.days+' days, till '+nice(end)) + (d.asOn?' · updated '+stamp(d.asOn):'');
+  cnt.textContent = meets.length+' meeting'+(meets.length===1?'':'s');
+  try{ if (navigator.setAppBadge){ todayLeft? navigator.setAppBadge(todayLeft) : navigator.clearAppBadge(); } }catch(e){}
+
+  var h='';
+  if (state.err) h+='<div class="msg'+(state.offline?'':' bad')+'">'+esc(state.err)+'</div>';
+  if (next){
+    var label = next.date===now.date ? (next.m<0?'Today':(next.m<=now.mins?'Going on now':inWords(next.m-now.mins))) : (next.date===addDays(now.date,1)?'Tomorrow':nice(next.date));
+    h+='<div class="next"><div class="k">Next · '+esc(label)+'</div><div class="tt">'+esc(next.title)+'</div><div class="m">'+
+       esc((next.time||'All day')+(next.date!==now.date?', '+nice(next.date):'')+(next.loc?' · '+next.loc:''))+
+       (next.clash?' · <span class="tag bad">Time clash</span>':'')+'</div></div>';
+  }
+  if (!rows.length) h+='<div class="empty">No meetings in this period.</div>';
+  var last='';
+  rows.forEach(function(e){
+    if (e.date!==last){
+      if (last) h+='</div>';
+      var n=meets.filter(function(x){return x.date===e.date;}).length;
+      var lab = e.date===now.date ? 'Today · '+nice(e.date) : e.date===addDays(now.date,1) ? 'Tomorrow · '+nice(e.date) : nice(e.date);
+      h+='<div class="day"><div class="dh'+(e.date===now.date?' today':'')+'">'+esc(lab)+(n?'<span class="n">'+n+' meeting'+(n===1?'':'s')+'</span>':'')+'</div>';
+      last=e.date;
+    }
+    if (e.isHol){ h+='<div class="hol"><span class="dot" style="background:var(--ok)"></span>'+esc(e.short)+(e.gHol?' – holiday':' – restricted holiday')+'</div>'; return; }
+    var ch=chairOf(e.title,e.loc), isNow=e===next && e.date===now.date && e.m>=0 && e.m<=now.mins;
+    h+='<div class="it'+(done(e)?' done':'')+'"><div class="t">'+(e.time||'All day')+'</div><div><div class="tt">'+esc(e.title)+'</div><div class="m">'+
+       '<span class="dot" style="background:'+CATS[catOf(e.title)]+'"></span>'+
+       (e.loc?'<span>'+esc(e.loc)+'</span>':'')+(ch?'<span class="tag">'+esc(ch)+'</span>':'')+
+       (isNow?'<span class="tag now">Now</span>':'')+(e.clash?'<span class="tag bad">Time clash</span>':'')+'</div></div></div>';
+  });
+  if (last) h+='</div>';
+  body.innerHTML=h;
+}
+
+document.getElementById('pills').addEventListener('click',function(ev){ var b=ev.target.closest('[data-d]'); if(!b) return; state.days=+b.getAttribute('data-d'); set(LS.days,String(state.days)); render(); });
+document.getElementById('refresh').onclick=function(){ load(true); };
+document.getElementById('settings').onclick=function(){ showSetup(); };
+
+/* install button (desktop Chrome/Edge, Android) */
+var deferred=null, ib=document.getElementById('install');
+window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); deferred=e; ib.classList.add('on'); });
+ib.onclick=function(){ if(!deferred) return; deferred.prompt(); deferred.userChoice.finally(function(){ deferred=null; ib.classList.remove('on'); }); };
+window.addEventListener('appinstalled',function(){ ib.classList.remove('on'); });
+
+/* keep fresh */
+setInterval(function(){ if (!document.hidden) load(false); }, 5*60*1000);
+setInterval(function(){ if (!document.hidden && state.data) render(); }, 60*1000);       // countdown + done meetings
+document.addEventListener('visibilitychange',function(){ if (!document.hidden) load(false); });
+window.addEventListener('online',function(){ load(false); });
+window.addEventListener('hashchange',function(){ if (readSetupLink()){ state.data=null; load(true); } });
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+render(); load(false);
+})();
+</script>
+</body>
+</html>
