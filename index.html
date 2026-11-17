@@ -211,7 +211,8 @@ function render(){
   var now=ist(), end=addDays(now.date, state.days===1?0:state.days);
   var rows = d.rows.map(function(r){
     var isHol=/^\s*\[(bihar holiday|rh)\]/i.test(r[2]);
-    return { date:r[0], time:isHol?'':r[1], m:isHol?-1:mins(r[1]), title:r[2], loc:r[3], isHol:isHol, gHol:/^\s*\[bihar holiday\]/i.test(r[2]),
+    var allDay=isHol||!r[1]||r[1]==='00:00';
+    return { date:r[0], time:allDay?'':r[1], m:allDay?-1:mins(r[1]), title:r[2], loc:r[3], isHol:isHol, gHol:/^\s*\[bihar holiday\]/i.test(r[2]),
              short: isHol? r[2].replace(/^\s*\[(bihar holiday|rh)\]\s*/i,'') : r[2] };
   }).filter(function(e){ return e.date>=now.date && e.date<=end; });
   rows.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:a.m-b.m; });

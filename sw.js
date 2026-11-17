@@ -1,5 +1,5 @@
 /* Offline support: keeps the app itself available offline. Meeting data is saved by the page. */
-var CACHE = 'mdcal-v1';
+var CACHE = 'mdcal-v2';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', function (e) {
