@@ -18,13 +18,13 @@ once on each device and stay only on that device.
 
 ## Open the app
 
-`https://mdsbpdcl-hub.github.io/mdsbpdclcalendar/`
+`https://mdsbpdcl-hub.github.io/MDSBPDCLCalendar/`
 
 First time on a device, paste the web app link and key. Or open this one-time setup link
 (do not share it, it contains your key):
 
 ```
-https://mdsbpdcl-hub.github.io/mdsbpdclcalendar/#u=<WEB_APP_LINK>&k=<KEY>
+https://mdsbpdcl-hub.github.io/MDSBPDCLCalendar/#u=<WEB_APP_LINK>&k=<KEY>
 ```
 
 ## Install
